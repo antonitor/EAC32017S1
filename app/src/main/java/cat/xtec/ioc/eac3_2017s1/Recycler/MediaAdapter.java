@@ -29,7 +29,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHol
     }
 
     public interface MediaAdapterOnClickHandler {
-        void onClick(String mediaName, String mediaPath, long latitude, long longitude);
+        void onClick(int isVideo, String mediaPath, float latitude, float longitude);
     }
 
     @Override
@@ -78,6 +78,7 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHol
             super(itemView);
             nameTextView = (TextView) itemView.findViewById(R.id.media_name);
             mediaTypeTextView = (ImageView) itemView.findViewById(R.id.media_type_image);
+            itemView.setOnClickListener(this);
         }
 
         @Override
@@ -85,11 +86,11 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHol
             if (!mCursor.moveToPosition(getAdapterPosition())) {
                 return;
             }
-            String mediaName = mCursor.getString(mCursor.getColumnIndex(MediaTable.COLUMN_FILE_NAME));
+            int idVideo = mCursor.getInt(mCursor.getColumnIndex(MediaTable.COLUMN_IS_VIDEO));
             String mediaPath = mCursor.getString(mCursor.getColumnIndex(MediaTable.COLUMN_PATH));
-            long latitude = mCursor.getLong(mCursor.getColumnIndex(MediaTable.COLUMN_LATITUDE));
-            long longitude = mCursor.getLong(mCursor.getColumnIndex(MediaTable.COLUMN_LONGITUDE));
-            mClickHandler.onClick(mediaName, mediaPath, latitude, longitude);
+            float latitude = mCursor.getFloat(mCursor.getColumnIndex(MediaTable.COLUMN_LATITUDE));
+            float longitude = mCursor.getFloat(mCursor.getColumnIndex(MediaTable.COLUMN_LONGITUDE));
+            mClickHandler.onClick(idVideo, mediaPath, latitude, longitude);
         }
     }
 }

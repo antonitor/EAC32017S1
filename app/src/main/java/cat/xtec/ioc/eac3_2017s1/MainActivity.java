@@ -92,8 +92,13 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
 
     @Override
-    public void onClick(String mediaName, String mediaPath, long latitude, long longitude) {
-
+    public void onClick(int isVideo, String mediaPath, float latitude, float longitude) {
+        Intent intent = new Intent(this, MediaActivity.class);
+        intent.putExtra(getString(R.string.extra_isvideo),isVideo);
+        intent.putExtra(getString(R.string.extra_media_path),mediaPath);
+        intent.putExtra(getString(R.string.extra_latitude),latitude);
+        intent.putExtra(getString(R.string.extra_longitude),longitude);
+        startActivity(intent);
     }
 
     private ItemTouchHelper getItemTouchHelper() {
@@ -155,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return Uri.parse(cursor.getString(cursor.getColumnIndex(MediaTable.COLUMN_PATH)));
     }
 
-    private long addNewMedia(String name, String path, int isVideo, long latitude, long longitude) {
+    private long addNewMedia(String name, String path, int isVideo, float latitude, float longitude) {
         ContentValues cv = new ContentValues();
         cv.put(MediaTable.COLUMN_FILE_NAME, name);
         cv.put(MediaTable.COLUMN_PATH, path);
@@ -214,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         if (requestCode == REQUEST_TAKE_PHOTO) {
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
-                addNewMedia(mCurrentFileName, mCurrentPath, 0, (long) mCurrentLocation.getLatitude(), (long) mCurrentLocation.getLongitude());
+                addNewMedia(mCurrentFileName, mCurrentPath, 0, (float) mCurrentLocation.getLatitude(), (float) mCurrentLocation.getLongitude());
                 mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }
@@ -222,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         if (requestCode == REQUEST_TAKE_VIDEO) {
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
-                addNewMedia(mCurrentFileName, mCurrentPath, 1, (long) mCurrentLocation.getLatitude(), (long) mCurrentLocation.getLongitude());
+                addNewMedia(mCurrentFileName, mCurrentPath, 1, (float) mCurrentLocation.getLatitude(), (float) mCurrentLocation.getLongitude());
                 mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }

@@ -2,4 +2,9 @@
     <string name="app_name">Galeria</string>
     <string name="savedPhotoPath">xsavedphotopath</string>
     <string name="savedPhotoName">xsavedphotoname</string>
+    <string name="title_activity_media">Map</string>
+    <string name="extra_media_path">xmediapath</string>
+    <string name="extra_latitude">xlatitude</string>
+    <string name="extra_longitude">xlongitude</string>
+    <string name="extra_isvideo">xisvideo</string>
 </resources>
