@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Galeria</string>
+    <string name="savedPhotoPath">xsavedphotopath</string>
+    <string name="savedPhotoName">xsavedphotoname</string>
+</resources>
