@@ -6,14 +6,12 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -62,7 +60,6 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        restoreImageFromSharedPreferences();
         RecyclerView mediaRecyclerView = (RecyclerView) this.findViewById(R.id.media_list_view);
         mediaRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         dbHelper = new MediaDBHelper(this);
@@ -247,22 +244,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         File file = File.createTempFile(fileName, suffix, storageDir);
         mCurrentPath = file.getAbsolutePath();
         mCurrentFileName = fileName;
-        saveImageOnSharedPreferences();
         return file;
-    }
-
-    private void saveImageOnSharedPreferences() {
-        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(getString(R.string.savedPhotoPath), mCurrentPath);
-        editor.putString(getString(R.string.savedPhotoName), mCurrentFileName);
-        editor.commit();
-    }
-
-    private void restoreImageFromSharedPreferences() {
-        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
-        mCurrentPath = sharedPref.getString(getString(R.string.savedPhotoPath), "");
-        mCurrentFileName = sharedPref.getString(getString(R.string.savedPhotoName), "");
     }
 
     private void checkPermissions() {
