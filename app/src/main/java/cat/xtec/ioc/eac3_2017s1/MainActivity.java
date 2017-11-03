@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
                 addNewMedia(mCurrentFileName, mCurrentPath, 0, (long) mCurrentLocation.getLatitude(), (long) mCurrentLocation.getLongitude());
+                mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }
         }
@@ -222,6 +223,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
                 addNewMedia(mCurrentFileName, mCurrentPath, 1, (long) mCurrentLocation.getLatitude(), (long) mCurrentLocation.getLongitude());
+                mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }
         }
@@ -264,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         } else {
             mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
+            updateButtonsStatus();
         }
     }
 
@@ -279,8 +282,42 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                     } else {
                         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
                         mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
+                        updateButtonsStatus();
                     }
                 }
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        updateButtonsStatus();
+    }
+
+    @Override
+    public void onStatusChanged(String s, int status, Bundle bundle) {
+        updateButtonsStatus();
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+        Toast.makeText(getApplicationContext(), "GPS habilitat per l'usuari", Toast.LENGTH_LONG).show();
+        updateButtonsStatus();
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+        Toast.makeText(getApplicationContext(), "GPS desactivat per l'usuari", Toast.LENGTH_LONG).show();
+        updateButtonsStatus();
+    }
+
+    public void updateButtonsStatus() {
+        if (mCurrentLocation != null) {
+            enableButtons();
+        } else {
+            dissableButtons();
         }
     }
 
@@ -296,42 +333,5 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         mVideoActionButton.setAlpha(0.4f);
         mPictureActionButton.setEnabled(false);
         mPictureActionButton.setAlpha(0.4f);
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        enableButtons();
-    }
-
-    @Override
-    public void onStatusChanged(String s, int status, Bundle bundle) {
-        String missatge = "";
-        switch (status) {
-            case LocationProvider.OUT_OF_SERVICE:
-                missatge = "GPS status: Out of service";
-                dissableButtons();
-                break;
-            case LocationProvider.TEMPORARILY_UNAVAILABLE:
-                missatge = "GPS status: Temporarily unavailable";
-                dissableButtons();
-                break;
-            case LocationProvider.AVAILABLE:
-                missatge = "GPS status: Available";
-                break;
-        }
-        Toast.makeText(getApplicationContext(), missatge, Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS habilitat per l'usuari", Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS desactivat per l'usuari", Toast.LENGTH_LONG).show();
-        dissableButtons();
     }
 }
