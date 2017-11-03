@@ -115,58 +115,81 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         });
     }
 
-    private Cursor getAllMedia() {
-        return mDb.query(
-                MediaTable.TABLE_NAME,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
-    }
-
-    private boolean removeMedia(long id) {
-        if (deleteMediaFromStorage(getPathFromMedia(id))) {
-            return mDb.delete(MediaTable.TABLE_NAME, MediaTable._ID + "=" + id, null) > 0;
+    private void checkPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST);
+        } else {
+            updateLocationChanges();
         }
-        return false;
     }
 
-    private boolean deleteMediaFromStorage(Uri uri) {
-        File fdelete = new File(uri.getPath());
-        if (fdelete.exists()) {
-            return fdelete.delete();
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST:
+                if (grantResults.length > 0) {
+                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED || grantResults[2] != PackageManager.PERMISSION_GRANTED) {
+                        finish();
+                    } else {
+                        updateLocationChanges();
+                    }
+                }
         }
-        return false;
     }
 
-    private Uri getPathFromMedia(long id) {
-        String[] selectionArgs = new String[]{"" + id};
-        Cursor cursor = mDb.query(
-                MediaTable.TABLE_NAME,
-                new String[]{MediaTable.COLUMN_PATH},
-                MediaTable._ID + "=?",
-                selectionArgs,
-                null,
-                null,
-                null
-        );
-        cursor.moveToFirst();
-        return Uri.parse(cursor.getString(cursor.getColumnIndex(MediaTable.COLUMN_PATH)));
+    @SuppressLint("MissingPermission")
+    private void updateLocationChanges() {
+        if (mLocationManager == null) {
+            mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
+        }
+        mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
+        updateButtonsStatus();
     }
 
-    private long addNewMedia(String name, String path, int isVideo, float latitude, float longitude) {
-        ContentValues cv = new ContentValues();
-        cv.put(MediaTable.COLUMN_FILE_NAME, name);
-        cv.put(MediaTable.COLUMN_PATH, path);
-        cv.put(MediaTable.COLUMN_IS_VIDEO, isVideo);
-        cv.put(MediaTable.COLUMN_LATITUDE, latitude);
-        cv.put(MediaTable.COLUMN_LONGITUDE, longitude);
-        return mDb.insert(MediaTable.TABLE_NAME, null, cv);
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        updateButtonsStatus();
     }
 
+    @Override
+    public void onStatusChanged(String s, int status, Bundle bundle) {
+        updateButtonsStatus();
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+        Toast.makeText(getApplicationContext(), "GPS habilitat per l'usuari", Toast.LENGTH_LONG).show();
+        updateLocationChanges();
+        updateButtonsStatus();
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+        Toast.makeText(getApplicationContext(), "GPS desactivat per l'usuari", Toast.LENGTH_LONG).show();
+        mLocationManager = null;
+        dissableButtons();
+    }
+
+    public void updateButtonsStatus() {
+        if (mCurrentLocation != null) {
+            mVideoActionButton.setEnabled(true);
+            mVideoActionButton.setAlpha(1f);
+            mPictureActionButton.setEnabled(true);
+            mPictureActionButton.setAlpha(1f);
+        } else {
+            dissableButtons();
+        }
+    }
+
+    private void dissableButtons() {
+        mVideoActionButton.setEnabled(false);
+        mVideoActionButton.setAlpha(0.4f);
+        mPictureActionButton.setEnabled(false);
+        mPictureActionButton.setAlpha(0.4f);
+    }
 
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -217,7 +240,6 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
                 addNewMedia(mCurrentFileName, mCurrentPath, 0, (float) mCurrentLocation.getLatitude(), (float) mCurrentLocation.getLongitude());
-                mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }
         }
@@ -225,7 +247,6 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             if (resultCode == RESULT_OK) {
                 mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
                 addNewMedia(mCurrentFileName, mCurrentPath, 1, (float) mCurrentLocation.getLatitude(), (float) mCurrentLocation.getLongitude());
-                mCurrentLocation = null;
                 mAdapter.swapCursor(getAllMedia());
             }
         }
@@ -247,78 +268,56 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return file;
     }
 
-    private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST);
-        } else {
-            mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
-            updateButtonsStatus();
+
+    private Cursor getAllMedia() {
+        return mDb.query(
+                MediaTable.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private boolean removeMedia(long id) {
+        if (deleteMediaFromStorage(getPathFromMedia(id))) {
+            return mDb.delete(MediaTable.TABLE_NAME, MediaTable._ID + "=" + id, null) > 0;
         }
+        return false;
     }
 
-
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST:
-                if (grantResults.length > 0) {
-                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED || grantResults[2] != PackageManager.PERMISSION_GRANTED) {
-                        finish();
-                    } else {
-                        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-                        mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
-                        updateButtonsStatus();
-                    }
-                }
+    private boolean deleteMediaFromStorage(Uri uri) {
+        File fdelete = new File(uri.getPath());
+        if (fdelete.exists()) {
+            return fdelete.delete();
         }
+        return false;
     }
 
-
-    @SuppressLint("MissingPermission")
-    @Override
-    public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        updateButtonsStatus();
+    private Uri getPathFromMedia(long id) {
+        String[] selectionArgs = new String[]{"" + id};
+        Cursor cursor = mDb.query(
+                MediaTable.TABLE_NAME,
+                new String[]{MediaTable.COLUMN_PATH},
+                MediaTable._ID + "=?",
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        cursor.moveToFirst();
+        return Uri.parse(cursor.getString(cursor.getColumnIndex(MediaTable.COLUMN_PATH)));
     }
 
-    @Override
-    public void onStatusChanged(String s, int status, Bundle bundle) {
-        updateButtonsStatus();
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS habilitat per l'usuari", Toast.LENGTH_LONG).show();
-        updateButtonsStatus();
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS desactivat per l'usuari", Toast.LENGTH_LONG).show();
-        updateButtonsStatus();
-    }
-
-    public void updateButtonsStatus() {
-        if (mCurrentLocation != null) {
-            enableButtons();
-        } else {
-            dissableButtons();
-        }
-    }
-
-    private void enableButtons() {
-        mVideoActionButton.setEnabled(true);
-        mVideoActionButton.setAlpha(1f);
-        mPictureActionButton.setEnabled(true);
-        mPictureActionButton.setAlpha(1f);
-    }
-
-    private void dissableButtons() {
-        mVideoActionButton.setEnabled(false);
-        mVideoActionButton.setAlpha(0.4f);
-        mPictureActionButton.setEnabled(false);
-        mPictureActionButton.setAlpha(0.4f);
+    private long addNewMedia(String name, String path, int isVideo, float latitude, float longitude) {
+        ContentValues cv = new ContentValues();
+        cv.put(MediaTable.COLUMN_FILE_NAME, name);
+        cv.put(MediaTable.COLUMN_PATH, path);
+        cv.put(MediaTable.COLUMN_IS_VIDEO, isVideo);
+        cv.put(MediaTable.COLUMN_LATITUDE, latitude);
+        cv.put(MediaTable.COLUMN_LONGITUDE, longitude);
+        return mDb.insert(MediaTable.TABLE_NAME, null, cv);
     }
 }

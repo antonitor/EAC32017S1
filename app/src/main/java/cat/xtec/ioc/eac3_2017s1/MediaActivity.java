@@ -58,7 +58,6 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
         mImageView = findViewById(R.id.image_view);
         mImageView.setVisibility(View.VISIBLE);
         mImageView.setImageURI(Uri.parse(mMediaPath));
-        mImageView.setScaleY(-1f);
     }
 
     private void showVideo(){
