@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.RectF;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -31,6 +32,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -128,20 +130,17 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     View itemView = viewHolder.itemView;
                     float height = (float) itemView.getBottom() - (float) itemView.getTop();
-                    float width = (float) itemView.getRight() - (float) itemView.getLeft();
-                    float textHeight = height /2 ;
-                    float textY = height - height/4;
-                    float textX = (float) itemView.getLeft() + width/20;
-                    float imageWidth = height / 3;
-                    float imageHeigth = height;
-
                     if (dX > 0) {
                         p.setColor(Color.GRAY);
                         c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
-                        p.setColor(Color.WHITE);
-                        p.setTextSize(textHeight);
-                        c.drawText(getString(R.string.esborrar), textX, textY, p);
-
+                        float left = 100;
+                        float bottom = itemView.getBottom() - height/6;
+                        float top = itemView.getTop() + height/4;
+                        float imageWidth = (bottom - top)/1.2f;
+                        float right = left + imageWidth;
+                        RectF rectF = new RectF(left, top,right,bottom);
+                        icon = BitmapFactory.decodeResource(getResources(),R.drawable.trash);
+                        c.drawBitmap(icon,null,rectF,p);
                     }
                 }
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
