@@ -13,8 +13,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -31,11 +33,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -53,8 +52,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     private MediaAdapter mAdapter;
     private SQLiteDatabase mDb;
     private MediaDBHelper dbHelper;
+    //Ruta del fitxer que es vol desar a la bd
     private String mCurrentPath;
+    //Nom del fitxer que es vol desar a la bd
     private String mCurrentFileName;
+    //Localització que es vol desar a la bd
     private Location mCurrentLocation;
     private static final int REQUEST_TAKE_VIDEO = 20;
     private static final int REQUEST_TAKE_PHOTO = 21;
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         mDb = dbHelper.getWritableDatabase();
         mAdapter = new MediaAdapter(this, getAllMedia(), this);
         mediaRecyclerView.setAdapter(mAdapter);
+        //Afegim al recyclerView un ItemTouchHelper per poder borrar fent swipe
         getItemTouchHelper().attachToRecyclerView(mediaRecyclerView);
 
         mPictureActionButton = (FloatingActionButton) this.findViewById(R.id.take_picture_floating_action_button);
@@ -91,56 +94,101 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                 dispatchTakeVideoIntent();
             }
         });
+        //D'entrada els botons per fer foto o video estaran deshabilitats
         dissableButtons();
+        //Comprovam si tenim els permisos adients
         checkPermissions();
     }
 
-
+    /**
+     * Mètode sobreescrit de l'interfície MediaAdapterOnClickHandler que ens permet recuperar
+     * les dades de la base de dades corresponents al item on hem fet clic i llençar l'activity
+     * MediaActivity amb els extres corresponents.
+     *
+     * @param isVideo   0 foto / 1 video
+     * @param mediaPath ruta de l'arxiu
+     * @param latitude  latitud obtinguta en el moment de la captura
+     * @param longitude longitud obtinguda en el moment de la captura
+     */
     @Override
     public void onClick(int isVideo, String mediaPath, float latitude, float longitude) {
         Intent intent = new Intent(this, MediaActivity.class);
-        intent.putExtra(getString(R.string.extra_isvideo),isVideo);
-        intent.putExtra(getString(R.string.extra_media_path),mediaPath);
-        intent.putExtra(getString(R.string.extra_latitude),latitude);
-        intent.putExtra(getString(R.string.extra_longitude),longitude);
+        intent.putExtra(getString(R.string.extra_isvideo), isVideo);
+        intent.putExtra(getString(R.string.extra_media_path), mediaPath);
+        intent.putExtra(getString(R.string.extra_latitude), latitude);
+        intent.putExtra(getString(R.string.extra_longitude), longitude);
         startActivity(intent);
     }
 
+    /**
+     * Aquest mètode ens torna un nou objecte ItemTouchHelper configurat per tal de poder esborrar
+     * arxius de la galeria fent swipe sobre el RecyclerView
+     *
+     * @return objecte ItemTouchHelper
+     */
     private ItemTouchHelper getItemTouchHelper() {
         return new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
 
+            //Objecte que ens permèt dibuixar al canvas dins el mètode onChildDraw
             Paint p = new Paint();
 
+            //No ens interesa
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
             }
 
+            /**
+             * Aquest mètode es llença quan fem swipe sobre un item del RecyclerView
+             * @param viewHolder holder corresponent al item
+             * @param direction direcció cap a la que fem swipe
+             */
             @Override
             public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                 long id = (long) viewHolder.itemView.getTag();
+                //Si el mètode removeMedia torna true, actualitzem l'adapter amb un nou cursor de la bd
                 if (removeMedia(id)) {
                     mAdapter.swapCursor(getAllMedia());
                 }
             }
 
+            /**
+             * Aquest mètode ens permet dibuixar sobre la vista RecyclerView
+             * @param c Canvas per dibuixar que ocupa tota la vista del RecyclerView
+             * @param recyclerView RecyclerView al que esta fixat aquest ItemTouchHelper
+             * @param viewHolder ViewHolder amb el que s'esta interactuant
+             * @param dX Quantitat de moviment horitzontal causat per l'acció de l'usuari
+             * @param dY Quantitat de moviment vertical causat per l'acció de l'usuari
+             * @param actionState Tipus de interacció: ACTION_STATE_DRAG o ACTION_STATE_SWIPE.
+             * @param isCurrentlyActive True si aquest view està sent controlat per l'usuari o fals
+             *                          si està tornant al seu estat original.
+             */
             @Override
             public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
                 Bitmap icon;
+                //Quan el tipus d'interacció és swipe:
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    //Vista amb la que s'està interactuant
                     View itemView = viewHolder.itemView;
+                    //Altura de la vista
                     float height = (float) itemView.getBottom() - (float) itemView.getTop();
+                    //Quan el moviment horitzontal causat per l'usuari es major a zero:
                     if (dX > 0) {
-                        p.setColor(Color.GRAY);
+                        //Dibuixem un rectangle de color gris degradat a blanc que aumentarà amb el moviment de l'usuari
+                        Shader shader = new LinearGradient((float) itemView.getLeft(), (float) itemView.getBottom(), dX, (float) itemView.getTop(), Color.RED, Color.WHITE, Shader.TileMode.CLAMP);
+                        p.setShader(shader);
                         c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
+                        //Dibuixem una icona per informar a l'usuari que s'esborrarà l'arixu
+                        //Posicions relatives a la posició de la vista:
                         float left = 100;
-                        float bottom = itemView.getBottom() - height/6;
-                        float top = itemView.getTop() + height/4;
-                        float imageWidth = (bottom - top)/1.2f;
+                        float bottom = itemView.getBottom() - height / 6;
+                        float top = itemView.getTop() + height / 4;
+                        float imageWidth = (bottom - top) / 1.2f;
                         float right = left + imageWidth;
-                        RectF rectF = new RectF(left, top,right,bottom);
-                        icon = BitmapFactory.decodeResource(getResources(),R.drawable.trash);
-                        c.drawBitmap(icon,null,rectF,p);
+                        //RectF emmagatzema les coordenades d'un rectangle per tal de dibuixar-hi l'icona a dintre
+                        RectF rectF = new RectF(left, top, right, bottom);
+                        icon = BitmapFactory.decodeResource(getResources(), R.drawable.trash);
+                        c.drawBitmap(icon, null, rectF, p);
                     }
                 }
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
@@ -148,6 +196,10 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         });
     }
 
+    /**
+     * Comprova si s'han concedit els permisos per accedir al Gps, Càmera i emmagatzament extern:
+     *
+     */
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST);
