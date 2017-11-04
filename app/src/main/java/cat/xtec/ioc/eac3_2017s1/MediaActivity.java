@@ -79,7 +79,7 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         LatLng position = new LatLng(mLatitude, mLongitude);
-        mMap.addMarker(new MarkerOptions().position(position).title("Marker Where Media Was Captured"));
+        mMap.addMarker(new MarkerOptions().position(position).title(getString(R.string.marker_media)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 8f));
 
     }

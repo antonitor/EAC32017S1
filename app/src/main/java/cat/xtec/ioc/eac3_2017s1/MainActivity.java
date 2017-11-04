@@ -161,14 +161,14 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
     @Override
     public void onProviderEnabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS habilitat per l'usuari", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), R.string.gps_enabled, Toast.LENGTH_LONG).show();
         updateLocationChanges();
         updateButtonsStatus();
     }
 
     @Override
     public void onProviderDisabled(String s) {
-        Toast.makeText(getApplicationContext(), "GPS desactivat per l'usuari", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), R.string.gps_disabled, Toast.LENGTH_LONG).show();
         mLocationManager = null;
         dissableButtons();
     }
@@ -198,14 +198,14 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             // Create the File where the photo should go
             File photoFile = null;
             try {
-                photoFile = createFile("JPEG_", ".jpg");
+                photoFile = createFile(getString(R.string.jpeg_prefix), getString(R.string.jpg_suffix));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this, "cat.xtec.ioc.eac3_2017s1.fileprovider", photoFile);
+                Uri photoURI = FileProvider.getUriForFile(this, getString(R.string.fileprovider_authority), photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
             }
@@ -219,14 +219,14 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             // Create the File where the photo should go
             File videoFile = null;
             try {
-                videoFile = createFile("MP4_", ".mp4");
+                videoFile = createFile(getString(R.string.mp4_prefix), getString(R.string.mp4_suffix));
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             // Continue only if the File was successfully created
             if (videoFile != null) {
-                Uri videoURI = FileProvider.getUriForFile(this, "cat.xtec.ioc.eac3_2017s1.fileprovider", videoFile);
+                Uri videoURI = FileProvider.getUriForFile(this, getString(R.string.fileprovider_authority), videoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoURI);
                 startActivityForResult(takePictureIntent, REQUEST_TAKE_VIDEO);
             }
@@ -254,13 +254,13 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
 
     private File createFile(String prefix, String suffix) throws IOException {
-        File storageDir = new File(Environment.getExternalStorageDirectory(), "multimedia");
+        File storageDir = new File(Environment.getExternalStorageDirectory(), getString(R.string.external_directory_child));
         if (!storageDir.exists()) {
             if (!storageDir.mkdirs()) {
                 return null;
             }
         }
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat(getString(R.string.simple_date_format_pattern)).format(new Date());
         String fileName = prefix + timeStamp + suffix;
         File file = File.createTempFile(fileName, suffix, storageDir);
         mCurrentPath = file.getAbsolutePath();

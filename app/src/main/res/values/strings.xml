@@ -1,10 +1,25 @@
 <resources>
+
     <string name="app_name">Galeria</string>
-    <string name="savedPhotoPath">xsavedphotopath</string>
-    <string name="savedPhotoName">xsavedphotoname</string>
     <string name="title_activity_media">Map</string>
-    <string name="extra_media_path">xmediapath</string>
-    <string name="extra_latitude">xlatitude</string>
-    <string name="extra_longitude">xlongitude</string>
-    <string name="extra_isvideo">xisvideo</string>
+    <string name="gps_disabled">GPS desactivat per l\'usuari</string>
+    <string name="gps_enabled">GPS habilitat per l\'usuari</string>
+    <string name="marker_media">Marker Where Media Was Captured</string>
+
+    <string name="savedPhotoPath" translatable="false">xsavedphotopath</string>
+    <string name="savedPhotoName" translatable="false">xsavedphotoname</string>
+    <string name="extra_media_path" translatable="false">xmediapath</string>
+    <string name="extra_latitude" translatable="false">xlatitude</string>
+    <string name="extra_longitude" translatable="false">xlongitude</string>
+    <string name="extra_isvideo" translatable="false">xisvideo</string>
+
+    <string name="jpeg_prefix" translatable="false">JPEG_</string>
+    <string name="jpg_suffix" translatable="false">.jpg</string>
+    <string name="mp4_prefix" translatable="false">MP4_</string>
+    <string name="mp4_suffix" translatable="false">.mp4</string>
+
+    <string name="fileprovider_authority" translatable="false">cat.xtec.ioc.eac3_2017s1.fileprovider</string>
+    <string name="external_directory_child" translatable="false">multimedia</string>
+
+    <string name="simple_date_format_pattern" translatable="false">yyyyMMdd_HHmmss</string>
 </resources>
