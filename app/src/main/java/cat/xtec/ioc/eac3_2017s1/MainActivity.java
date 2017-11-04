@@ -9,6 +9,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -25,6 +30,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.widget.Toast;
 
@@ -99,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     }
 
     private ItemTouchHelper getItemTouchHelper() {
-        return new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        return new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
@@ -111,6 +117,23 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                 if (removeMedia(id)) {
                     mAdapter.swapCursor(getAllMedia());
                 }
+            }
+
+            @Override
+            public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+                    View itemView = viewHolder.itemView;
+                    Paint p = new Paint();
+                    if (dX > 0) {
+                        p.setColor(Color.GRAY);
+                        c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
+                        p.setColor(Color.WHITE);
+                        p.setTextSize(50);
+                        c.drawText("Esborrar?", (float) itemView.getLeft() + 30, (float) itemView.getBottom()- 30, p);
+
+                    }
+                }
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
             }
         });
     }
