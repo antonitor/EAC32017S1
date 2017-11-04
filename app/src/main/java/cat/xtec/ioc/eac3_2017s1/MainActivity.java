@@ -106,6 +106,9 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
     private ItemTouchHelper getItemTouchHelper() {
         return new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+
+            Paint p = new Paint();
+
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;
@@ -121,15 +124,23 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
             @Override
             public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+                Bitmap icon;
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
                     View itemView = viewHolder.itemView;
-                    Paint p = new Paint();
+                    float height = (float) itemView.getBottom() - (float) itemView.getTop();
+                    float width = (float) itemView.getRight() - (float) itemView.getLeft();
+                    float textHeight = height /2 ;
+                    float textY = height - height/4;
+                    float textX = (float) itemView.getLeft() + width/20;
+                    float imageWidth = height / 3;
+                    float imageHeigth = height;
+
                     if (dX > 0) {
                         p.setColor(Color.GRAY);
                         c.drawRect((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom(), p);
                         p.setColor(Color.WHITE);
-                        p.setTextSize(50);
-                        c.drawText("Esborrar?", (float) itemView.getLeft() + 30, (float) itemView.getBottom()- 30, p);
+                        p.setTextSize(textHeight);
+                        c.drawText(getString(R.string.esborrar), textX, textY, p);
 
                     }
                 }

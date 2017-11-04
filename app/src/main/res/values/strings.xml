@@ -22,4 +22,5 @@
     <string name="external_directory_child" translatable="false">multimedia</string>
 
     <string name="simple_date_format_pattern" translatable="false">yyyyMMdd_HHmmss</string>
+    <string name="esborrar">Esborrar?</string>
 </resources>
