@@ -198,7 +198,8 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
 
     /**
      * Comprova si s'han concedit els permisos per accedir al Gps, Càmera i emmagatzament extern:
-     *
+     * En versions posteriors a Android N aquestos s'han concedit al manifest.
+     * En versions posteriors a Android N, si hi ha algún permis no concedit, es demana en temps d'execució
      */
     private void checkPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -208,6 +209,12 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
+    /**
+     * Si s'ha demanat algún permís en temps d'execució, aquest mètode en recull la resposta de l'usuari
+     * @param requestCode codi assignat a la petició de permissos en temps d'execució
+     * @param permissions permissos que s'han demanat
+     * @param grantResults resposta de l'usuari a la petició de permissos     *
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -222,6 +229,12 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
+    /**
+     * Aquest mètode mai es llençarà si no s'han concedit tots els permisos
+     *
+     * Registra aquesta activity per tal que s'actualitzi periodicament amb el provider GPS_PROVIDER
+     * Actualitza la variable membre amb l'ultima localització coneguda pel provider GPS_PROVIDER
+     */
     @SuppressLint("MissingPermission")
     private void updateLocationChanges() {
         if (mLocationManager == null) {
@@ -233,17 +246,33 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     }
 
 
+    /**
+     * Mètode sobreescrit degut a l'implementació de LocationListener en aquesta Activiy
+     * Es llença cada cop que el provider actualitza la Localització del dispositiu, enregistra
+     * aquesta localització en la variable membre i actualitza l'estat dels botons per capturar
+     * @param location
+     */
     @Override
     public void onLocationChanged(Location location) {
         mCurrentLocation = location;
         updateButtonsStatus();
     }
 
+    /**
+     * Mètode sobreescrit degut a l'implementació de LocationListener en aquesta Activiy
+     *
+     * Actualitza l'estat dels botons per capturar quan l'estat del gps canvia
+     */
     @Override
     public void onStatusChanged(String s, int status, Bundle bundle) {
         updateButtonsStatus();
     }
 
+    /**
+     * Mètode sobreescrit degut a l'implementació de LocationListener en aquesta Activiy
+     * Actualitza la localització del dispositiu i l'estat dels botons per capturar quan l'usuari
+     * engega el gps.
+     */
     @Override
     public void onProviderEnabled(String s) {
         Toast.makeText(getApplicationContext(), R.string.gps_enabled, Toast.LENGTH_LONG).show();
@@ -251,6 +280,10 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         updateButtonsStatus();
     }
 
+    /**
+     * Mètode sobreescrit degut a l'implementació de LocationListener en aquesta Activiy
+     * Actualitza l'estat dels botons per capturar quan l'usuari atura el gps.
+     */
     @Override
     public void onProviderDisabled(String s) {
         Toast.makeText(getApplicationContext(), R.string.gps_disabled, Toast.LENGTH_LONG).show();
@@ -258,6 +291,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         dissableButtons();
     }
 
+    /**
+     * Actualitza l'estat dels botons per capturar:
+     * En cas que la variable global no contingui cap localització, els desactiva, en cas contrari,
+     * els activa.
+     */
     public void updateButtonsStatus() {
         if (mCurrentLocation != null) {
             mVideoActionButton.setEnabled(true);
@@ -269,6 +307,9 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
+    /**
+     * Desactiva els botons per capturar
+     */
     private void dissableButtons() {
         mVideoActionButton.setEnabled(false);
         mVideoActionButton.setAlpha(0.4f);
@@ -276,11 +317,15 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         mPictureActionButton.setAlpha(0.4f);
     }
 
+    /**
+     * Llença un intent que demana l'aplicació per defecte del dispositiu que en retorni una
+     * foto.
+     */
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
+        //Ens asegurem que existeix una aplicació per rebre l'intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
+            // Crea l'arxiu per emmagatzemar-hi la foto
             File photoFile = null;
             try {
                 photoFile = createFile(getString(R.string.jpeg_prefix), getString(R.string.jpg_suffix));
@@ -288,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                 e.printStackTrace();
             }
 
-            // Continue only if the File was successfully created
+            // Continúa tan sols si l'arxiu s'ha creat correctament
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this, getString(R.string.fileprovider_authority), photoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
@@ -297,11 +342,15 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
+    /**
+     * Llença un intent que demana l'aplicació per defecte del dispositiu que en retorni un
+     * video.
+     */
     private void dispatchTakeVideoIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
+        //Ens asegurem que existeix una aplicació per rebre l'intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
+            // Crea l'arxiu per emmagatzemar-hi el video
             File videoFile = null;
             try {
                 videoFile = createFile(getString(R.string.mp4_prefix), getString(R.string.mp4_suffix));
@@ -309,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
                 e.printStackTrace();
             }
 
-            // Continue only if the File was successfully created
+            // Continúa tan sols si l'arxiu s'ha creat correctament
             if (videoFile != null) {
                 Uri videoURI = FileProvider.getUriForFile(this, getString(R.string.fileprovider_authority), videoFile);
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, videoURI);
@@ -318,6 +367,12 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
+    /**
+     * Tan sols s'arribarà a aquest mètode si tots els permisos s'han concedit correctament
+     *
+     * @param requestCode codi del intent llençat amb startActivityForResult
+     * @param resultCode resultat exitos o fallit de l'intent
+     */
     @SuppressLint("MissingPermission")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -337,7 +392,14 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         }
     }
 
-
+    /**
+     * Crea un arxiu al emmagatzament extern del dispositiu al directori multimedia
+     *
+     * @param prefix prefix del nom del axiu
+     * @param suffix extensió del arxiu
+     * @return File creat
+     * @throws IOException
+     */
     private File createFile(String prefix, String suffix) throws IOException {
         File storageDir = new File(Environment.getExternalStorageDirectory(), getString(R.string.external_directory_child));
         if (!storageDir.exists()) {
@@ -353,7 +415,10 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return file;
     }
 
-
+    /**
+     * Recupera un cursor amb totes les dades de la base de dades
+     * @return cursor
+     */
     private Cursor getAllMedia() {
         return mDb.query(
                 MediaTable.TABLE_NAME,
@@ -366,6 +431,12 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         );
     }
 
+    /**
+     * Prova d'esborrar el arxiu del emmagatzament extern, si ho aconsegueix, ho esborra de la base de dades
+     *
+     * @param id del registre de la base de dades que correspon a l'arxiu
+     * @return true si s'ha borrat del emmagatzament i la base de dades exitosament
+     */
     private boolean removeMedia(long id) {
         if (deleteMediaFromStorage(getPathFromMedia(id))) {
             return mDb.delete(MediaTable.TABLE_NAME, MediaTable._ID + "=" + id, null) > 0;
@@ -373,6 +444,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return false;
     }
 
+    /**
+     * Esborra l'arxiu del emmagaztament extern del dispositiu
+     * @param uri ruta del fitxer a esborrar
+     * @return true si s'ha esborrat exitosament
+     */
     private boolean deleteMediaFromStorage(Uri uri) {
         File fdelete = new File(uri.getPath());
         if (fdelete.exists()) {
@@ -381,6 +457,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return false;
     }
 
+    /**
+     * Obté el contingut de la columna "path" d'un registre amb aquesta id de la base de dades
+     * @param id identificador del registre a la base de dades
+     * @return Uri correspoent a la ruta obtinguda a la base de dades
+     */
     private Uri getPathFromMedia(long id) {
         String[] selectionArgs = new String[]{"" + id};
         Cursor cursor = mDb.query(
@@ -396,6 +477,14 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         return Uri.parse(cursor.getString(cursor.getColumnIndex(MediaTable.COLUMN_PATH)));
     }
 
+    /**
+     * Afegeix un nou registre a la base de dades:
+     * @param name nom de l'arxiu
+     * @param path ruta de l'arxiu
+     * @param isVideo 0 foto, 1 video
+     * @param latitude latitud float
+     * @param longitude longitud float
+     */
     private long addNewMedia(String name, String path, int isVideo, float latitude, float longitude) {
         ContentValues cv = new ContentValues();
         cv.put(MediaTable.COLUMN_FILE_NAME, name);
