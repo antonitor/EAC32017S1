@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.MediaController;
@@ -17,6 +16,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+/**
+ * Activity que conté un FrameLayout que ocupa 6/10 de la pantalla i conté un VideoView i un
+ * ImageView superposats; tan sols es mostrarà un dels dos en funció de si es tracta d'un video o una foto.
+ *
+ * Aquesta activty conté també un fragment que ocupa el 4/10 inferior de la pantalla i ens mostra
+ * un mapa de GoogleMaps.
+ */
 public class MediaActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
@@ -36,14 +42,14 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //Recupera els extres que s'han pasat a l'intent que ha llençat aquesta Activty
         Intent intentThatStartedThisActivity = getIntent();
         mIsVideo = intentThatStartedThisActivity.getIntExtra(getString(R.string.extra_isvideo),-1);
         mMediaPath = intentThatStartedThisActivity.getStringExtra(getString(R.string.extra_media_path));
         mLatitude = intentThatStartedThisActivity.getFloatExtra(getString(R.string.extra_latitude),0f);
         mLongitude = intentThatStartedThisActivity.getFloatExtra(getString(R.string.extra_longitude),0f);
 
-        Log.d("LAT AND LONG ",  mLatitude + " : " + mLongitude);
-
+        //Si es tracta d'un video es mostrarà el VIdeoView, si es tracta d'una foto el ImageVIew
         if (mIsVideo == 0) {
             showImage();
         } else if (mIsVideo == 1) {
@@ -54,12 +60,19 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
 
     }
 
+    /**
+     * Mostra l'ImageView i l'infla amb l'imatge a la que apunta l'Uri
+     */
     private void showImage(){
         mImageView = findViewById(R.id.image_view);
         mImageView.setVisibility(View.VISIBLE);
         mImageView.setImageURI(Uri.parse(mMediaPath));
     }
 
+    /**
+     * Mostra el VideoView, l'infla amb el video al que apunta l'Uri i comença la reproducció.
+     * Afegeix a aquest VideoView un MediaController per tal de poder controlar la reproducció.
+     */
     private void showVideo(){
         mVideoView = findViewById(R.id.video_view);
         mVideoView.setVisibility(View.VISIBLE);
@@ -74,7 +87,11 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
 
-
+    /**
+     * Quan el GoogleMap està llest es llença aquest mètode que agafa la latitud i longitud
+     * que hem pasat a aquesta Activity com a extra i crea un marcador en aquesta localització.
+     * @param googleMap
+     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;

@@ -6,9 +6,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 import cat.xtec.ioc.eac3_2017s1.Data.MediaContract.MediaTable;
 
 /**
- * Created by Toni on 03/11/2017.
+ * Classe que hereta de SQLiteOpenHelper i gestiona la creació de les taules
+ * de la base de dades i permet recuperarne un objecte SQLiteDataBase per
+ * tal d'interaccionar-hi
  */
-
 public class MediaDBHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "media.db";

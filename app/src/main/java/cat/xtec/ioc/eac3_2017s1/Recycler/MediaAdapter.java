@@ -13,9 +13,10 @@ import cat.xtec.ioc.eac3_2017s1.R;
 
 
 /**
- * Created by Toni on 26/10/2017.
+ *  Classe que proporciona un Adapter al recyclerView que hi ha a MainActivity
+ *
+ *  Omple el recyclerView amb les dades que extreu de un cursor
  */
-
 public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHolder> {
 
     private Cursor mCursor;
@@ -28,6 +29,10 @@ public class MediaAdapter extends RecyclerView.Adapter<MediaAdapter.MediaViewHol
         this.mClickHandler = clickHandler;
     }
 
+    /**
+     * Interfície que ens ajuda a pasar les dades que ens interesen quan fem clic a un
+     * item del recyclerView
+     */
     public interface MediaAdapterOnClickHandler {
         void onClick(int isVideo, String mediaPath, float latitude, float longitude);
     }

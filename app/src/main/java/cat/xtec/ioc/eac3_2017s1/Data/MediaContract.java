@@ -3,9 +3,11 @@ package cat.xtec.ioc.eac3_2017s1.Data;
 import android.provider.BaseColumns;
 
 /**
- * Created by Toni on 03/11/2017.
+ * Clase que conté els noms de les columnes de la taula "media" juntament amb el
+ * nom d'aquesta.
+ *
+ * L'immplementació de BaseColumns afegeix el camp _ID
  */
-
 public class MediaContract {
     public static final class MediaTable implements BaseColumns {
         public static final String TABLE_NAME = "media";
