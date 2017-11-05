@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             }
         });
         //D'entrada els botons per fer foto o video estaran deshabilitats
-        dissableButtons();
+        updateButtonsStatus();
         //Comprovam si tenim els permisos adients
         checkPermissions();
     }
@@ -197,15 +197,15 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     }
 
     /**
-     * Comprova si s'han concedit els permisos per accedir al Gps, Càmera i emmagatzament extern:
+     * Comprova si s'han concedit els permisos per accedir al Gps i l'emmagatzament extern:
      * En versions posteriors a Android N aquestos s'han concedit al manifest.
      * En versions posteriors a Android N, si hi ha algún permis no concedit, es demana en temps d'execució
      */
     private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST);
         } else {
-            updateLocationChanges();
+            updateLocationManager();
         }
     }
 
@@ -220,10 +220,10 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST:
                 if (grantResults.length > 0) {
-                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED || grantResults[2] != PackageManager.PERMISSION_GRANTED) {
+                    if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED ) {
                         finish();
                     } else {
-                        updateLocationChanges();
+                        updateLocationManager();
                     }
                 }
         }
@@ -236,13 +236,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
      * Actualitza la variable membre amb l'ultima localització coneguda pel provider GPS_PROVIDER
      */
     @SuppressLint("MissingPermission")
-    private void updateLocationChanges() {
+    private void updateLocationManager() {
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             mLocationManager.requestLocationUpdates(GPS_PROVIDER, 1000, 1, this);
         }
-        mCurrentLocation = mLocationManager.getLastKnownLocation(GPS_PROVIDER);
-        updateButtonsStatus();
     }
 
 
@@ -276,19 +274,21 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
     @Override
     public void onProviderEnabled(String s) {
         Toast.makeText(getApplicationContext(), R.string.gps_enabled, Toast.LENGTH_LONG).show();
-        updateLocationChanges();
+        updateLocationManager();
         updateButtonsStatus();
     }
 
     /**
      * Mètode sobreescrit degut a l'implementació de LocationListener en aquesta Activiy
-     * Actualitza l'estat dels botons per capturar quan l'usuari atura el gps.
+     * Quan l'usuari atura el GPS s'alliberen les variables que referencien el LocationManager
+     * i la localització actual.
      */
     @Override
     public void onProviderDisabled(String s) {
         Toast.makeText(getApplicationContext(), R.string.gps_disabled, Toast.LENGTH_LONG).show();
         mLocationManager = null;
-        dissableButtons();
+        mCurrentLocation = null;
+        updateButtonsStatus();
     }
 
     /**
@@ -303,18 +303,11 @@ public class MainActivity extends AppCompatActivity implements MediaAdapter.Medi
             mPictureActionButton.setEnabled(true);
             mPictureActionButton.setAlpha(1f);
         } else {
-            dissableButtons();
+            mVideoActionButton.setEnabled(false);
+            mVideoActionButton.setAlpha(0.4f);
+            mPictureActionButton.setEnabled(false);
+            mPictureActionButton.setAlpha(0.4f);
         }
-    }
-
-    /**
-     * Desactiva els botons per capturar
-     */
-    private void dissableButtons() {
-        mVideoActionButton.setEnabled(false);
-        mVideoActionButton.setAlpha(0.4f);
-        mPictureActionButton.setEnabled(false);
-        mPictureActionButton.setAlpha(0.4f);
     }
 
     /**

@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="cat.xtec.ioc.eac3_2017s1">
 
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <uses-feature
+     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
 
