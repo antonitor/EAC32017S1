@@ -33,6 +33,7 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
     private ImageView mImageView;
     private VideoView mVideoView;
     private MediaController mMediaController;
+    private final float ZOOM = 14f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +98,7 @@ public class MediaActivity extends AppCompatActivity implements OnMapReadyCallba
         mMap = googleMap;
         LatLng position = new LatLng(mLatitude, mLongitude);
         mMap.addMarker(new MarkerOptions().position(position).title(getString(R.string.marker_media)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 8f));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, ZOOM));
 
     }
 }
